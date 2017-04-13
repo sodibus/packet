@@ -7,6 +7,7 @@ Package packet is a generated protocol buffer package.
 
 It is generated from these files:
 	client_packet.proto
+	cluster_packet.proto
 	shared.proto
 
 It has these top-level messages:
@@ -16,7 +17,15 @@ It has these top-level messages:
 	PacketCallerRecv
 	PacketCalleeRecv
 	PacketCalleeSend
+	ClusterPacketNodeInfo
+	ClusterPacketNodeInfoBatch
+	ClusterPacketCalleeInfo
+	ClusterPacketCalleeInfoBatch
+	ClusterPacketCalleeRemove
+	ClusterPacketInvocation
+	ClusterPacketResult
 	InvocationId
+	CalleeId
 	Invocation
 */
 package packet
