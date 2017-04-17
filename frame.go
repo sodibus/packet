@@ -2,7 +2,7 @@ package packet
 
 import "io"
 import "fmt"
-import "errors"
+
 import "encoding/binary"
 import "github.com/golang/protobuf/proto"
 
@@ -16,65 +16,10 @@ type Frame struct {
 
 // NewFrameWithPacket ...
 // Create a new Frame from a Packet
-func NewFrameWithPacket(m proto.Message) (*Frame, error) {
-	var t uint8
-	switch m.(type) {
-	case *PacketHandshake:
-		{
-			t = 1
-		}
-	case *PacketReady:
-		{
-			t = 2
-		}
-	case *PacketCallerSend:
-		{
-			t = 3
-		}
-	case *PacketCallerRecv:
-		{
-			t = 4
-		}
-	case *PacketCalleeRecv:
-		{
-			t = 5
-		}
-	case *PacketCalleeSend:
-		{
-			t = 6
-		}
-	case *ClusterPacketNodeInfo:
-		{
-			t = 101
-		}
-	case *ClusterPacketNodeInfoBatch:
-		{
-			t = 102
-		}
-	case *ClusterPacketCalleeInfo:
-		{
-			t = 103
-		}
-	case *ClusterPacketCalleeInfoBatch:
-		{
-			t = 104
-		}
-	case *ClusterPacketCalleeRemove:
-		{
-			t = 105
-		}
-	case *ClusterPacketInvocation:
-		{
-			t = 106
-		}
-	case *ClusterPacketResult:
-		{
-			t = 107
-		}
-	default:
-		{
-			return nil, errors.New("Unsupported Packet")
-		}
+func NewFrameWithPacket(m Packet) (*Frame, error) {
+	t := frameTypeFromPacket(m)
+	if t == 0 {
+		return nil, fmt.Errorf("Packet Type %v Not Supported", m)
 	}
 
 	data, err := proto.Marshal(m)
@@ -128,7 +73,7 @@ func ReadFrame(r io.Reader) (*Frame, error) {
 
 // ReadAndParse ...
 // A combination of ReadFrame and Frame#Parse
-func ReadAndParse(r io.Reader) (proto.Message, error) {
+func ReadAndParse(r io.Reader) (Packet, error) {
 	f, err := ReadFrame(r)
 	if err != nil {
 		return nil, err
@@ -161,91 +106,6 @@ func (f *Frame) Write(w io.Writer) error {
 
 // Parse ...
 // Parse the frame and return the underlying PacketXXXX structure
-func (f *Frame) Parse() (proto.Message, error) {
-	var err error
-	switch f.Type {
-	case 1:
-		{
-			var p PacketHandshake
-			err = proto.Unmarshal(f.Data, &p)
-			return &p, err
-		}
-	case 2:
-		{
-			var p PacketReady
-			err = proto.Unmarshal(f.Data, &p)
-			return &p, err
-		}
-	case 3:
-		{
-			var p PacketCallerSend
-			err = proto.Unmarshal(f.Data, &p)
-			return &p, err
-		}
-	case 4:
-		{
-			var p PacketCallerRecv
-			err = proto.Unmarshal(f.Data, &p)
-			return &p, err
-		}
-	case 5:
-		{
-			var p PacketCalleeRecv
-			err = proto.Unmarshal(f.Data, &p)
-			return &p, err
-		}
-	case 6:
-		{
-			var p PacketCalleeSend
-			err = proto.Unmarshal(f.Data, &p)
-			return &p, err
-		}
-	case 101:
-		{
-			var p ClusterPacketNodeInfo
-			err = proto.Unmarshal(f.Data, &p)
-			return &p, err
-		}
-	case 102:
-		{
-			var p ClusterPacketNodeInfoBatch
-			err = proto.Unmarshal(f.Data, &p)
-			return &p, err
-		}
-	case 103:
-		{
-			var p ClusterPacketCalleeInfo
-			err = proto.Unmarshal(f.Data, &p)
-			return &p, err
-		}
-
-	case 104:
-		{
-			var p ClusterPacketCalleeInfoBatch
-			err = proto.Unmarshal(f.Data, &p)
-			return &p, err
-		}
-	case 105:
-		{
-			var p ClusterPacketCalleeRemove
-			err = proto.Unmarshal(f.Data, &p)
-			return &p, err
-		}
-	case 106:
-		{
-			var p ClusterPacketInvocation
-			err = proto.Unmarshal(f.Data, &p)
-			return &p, err
-		}
-	case 107:
-		{
-			var p ClusterPacketResult
-			err = proto.Unmarshal(f.Data, &p)
-			return &p, err
-		}
-	default:
-		{
-			return nil, fmt.Errorf("Packet Type %d Not Supported", f.Type)
-		}
-	}
+func (f *Frame) Parse() (Packet, error) {
+	return packetFromFrame(f)
 }

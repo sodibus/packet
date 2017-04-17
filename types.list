@@ -1,0 +1,13 @@
+1 = PacketHandshake
+2 = PacketReady
+3 = PacketCallerSend
+4 = PacketCallerRecv
+5 = PacketCalleeRecv
+6 = PacketCalleeSend
+101 = ClusterPacketNodeInfo
+102 = ClusterPacketNodeInfoBatch
+103 = ClusterPacketCalleeInfo
+104 = ClusterPacketCalleeInfoBatch
+105 = ClusterPacketCalleeRemove
+106 = ClusterPacketInvocation
+107 = ClusterPacketResult
