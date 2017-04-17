@@ -6,13 +6,18 @@ import "errors"
 import "encoding/binary"
 import "github.com/golang/protobuf/proto"
 
+// Frame ...
+// Frame represents a single frame data on TCP, containing a type identifier and
+// a byte array of ambiguous data.
 type Frame struct {
 	Type uint8
 	Data []uint8
 }
 
+// NewFrameWithPacket ...
+// Create a new Frame from a Packet
 func NewFrameWithPacket(m proto.Message) (*Frame, error) {
-	var t uint8 = 0
+	var t uint8
 	switch m.(type) {
 	case *PacketHandshake:
 		{
@@ -80,6 +85,9 @@ func NewFrameWithPacket(m proto.Message) (*Frame, error) {
 	return &Frame{Type: t, Data: data}, nil
 }
 
+// ReadFrame ...
+// Read a Frame from io.Reader
+// if first byte is not 0xAA, a UnsynchronizedError will be returned
 func ReadFrame(r io.Reader) (*Frame, error) {
 	var err error
 	var head = make([]uint8, 1)
@@ -118,6 +126,16 @@ func ReadFrame(r io.Reader) (*Frame, error) {
 	return &Frame{Type: head[0], Data: data}, err
 }
 
+// ReadAndParse ...
+// A combination of ReadFrame and Frame#Parse
+func ReadAndParse(r io.Reader) (proto.Message, error) {
+	f, err := ReadFrame(r)
+	if err != nil {
+		return nil, err
+	}
+	return f.Parse()
+}
+
 func (f *Frame) Write(w io.Writer) error {
 	var err error
 
@@ -141,6 +159,8 @@ func (f *Frame) Write(w io.Writer) error {
 	return err
 }
 
+// Parse ...
+// Parse the frame and return the underlying PacketXXXX structure
 func (f *Frame) Parse() (proto.Message, error) {
 	var err error
 	switch f.Type {
@@ -225,7 +245,7 @@ func (f *Frame) Parse() (proto.Message, error) {
 		}
 	default:
 		{
-			return nil, errors.New(fmt.Sprintf("Unsupported Packet %d", f.Type))
+			return nil, fmt.Errorf("Packet Type %d Not Supported", f.Type)
 		}
 	}
 }
